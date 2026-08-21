@@ -1,17 +1,46 @@
-    string minWindow(string s, string t) {
-        unordered_map<char, int> letters; //unordered map for storing the characters in t that we need to check for in s
-        for(auto c : t) letters[c]++; 
-        int count = 0; //counts number of t's letters in current window
-        int low = 0, min_length = INT_MAX, min_start = 0;     
-        for(int high = 0; high<s.length(); high++) {
-            if(letters[s[high]] > 0) count++; //means that this letter is in t   
-            letters[s[high]]--; //reduce the count for the letter on which we are currently 
-            if(count == t.length()) { //if current windows contains all of the letters in t
-                while(low < high && letters[s[low]] < 0) letters[s[low]]++, low++; //move low ahead if its not of any significance
-                if(min_length > high-low) min_length = high-(min_start=low)+1; //update the min length
-                letters[s[low++]]++; //move low ahaead and also increment the value
-                count--; //count-- as we are moving low ahead & low pointed to a char in t before
-            }
-        }
-        return min_length == INT_MAX ? "" : s.substr(min_start, min_length); //check for edge case & return the result
+char* minWindow(char* s, char* t) {
+
+    int freq[128]={0};
+    int i=0,start=0,end=0;
+    int min_len=INT_MAX;  // Initially taking the length to be maximum
+    int req_count=0, curr_len=0,begin=0;
+    
+    while(t[i])           // Creating the frequency array of the "t" string and also to get the length of the string
+    {
+        freq[t[i]]++;     // Increasing the particular index of the freq array same as string character
+        req_count++;
+        i++;
     }
+    while(s[end])         // going till end of the s string
+    { 
+        if(freq[s[end]]>0)   // If already it was greater then it was present in the t string and now we got that in our window 
+        {
+            req_count--;     // As we got one req character of the t-string
+            curr_len++;      
+        }
+        freq[s[end]]--;      //for every character we will be decreasing the count..
+        //1. zero means we dont have it nor we want it
+        //2. positive means we are deficient of that character and it is required in our result window
+        //3. negative means we are surplus of thaat particular character
+    
+        while(req_count==0)   //As we got our window soo now we will try to decrease it from the start end till the window is valid
+        {
+            curr_len = end-start+1;   //everytime we will calculate the window length
+            if(min_len>curr_len)
+            {
+                min_len=curr_len;     // updating the minimum length of the window
+                begin =start;         // Keeping the starting index of the minimum window
+            }    
+            freq[s[start]]++;    // For every removal of the character we have to increase the frequency as we lost one from the freq array
+            if(freq[s[start]]>0)      // if freq becomes positive then we lost one required character from the window 
+                req_count++;          // which leads to increase in req_count..
+            start++;                  //decreasing the window from the start end
+        }
+        end++;                       //increasing the end pointer to eventually traverse till end of s-string
+    }
+    if(min_len == INT_MAX)           // if no window was found then we have to return empty string
+        return "";
+    s[begin+min_len]='\0';           // here we are using the same string to return the window as we know the starting point and the length
+    return &s[begin];                // we will append a null character to terminate the s-string for the required min_length of the window
+                                     // and return the same s string address from the begin index
+}
